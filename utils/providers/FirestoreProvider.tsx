@@ -1,12 +1,14 @@
 import { Context, createContext, useContext } from 'react';
 import {
 	DocumentData,
+	DocumentSnapshot,
 	QueryConstraint,
 	QueryDocumentSnapshot,
 	QuerySnapshot,
 	addDoc,
 	collection,
 	doc,
+	getDoc,
 	getDocs,
 	getFirestore,
 	query,
@@ -15,6 +17,80 @@ import {
 } from "firebase/firestore";
 import firebase from '../../config/firebase';
 import FirestoreSource from '../../config/firestore';
+
+export class EmergencyContact {
+	contactName: string;
+
+	constructor(
+		contactName: string
+	) {
+		this.contactName = contactName;
+	}
+
+	static fromData(data: any) {
+		console.log(data)
+		return new EmergencyContact(
+			data["contactName"]
+		)
+	}
+}
+
+export class User {
+	name: string;
+	emergencyContactOne: EmergencyContact;
+	emergencyContactTwo: EmergencyContact;
+
+	constructor(
+		name: string,
+		emergencyContactOne: EmergencyContact,
+		emergencyContactTwo: EmergencyContact,
+	) {
+		this.name = name;
+		this.emergencyContactOne = emergencyContactOne;
+		this.emergencyContactTwo = emergencyContactTwo;
+	};
+
+	static fromData(data: any) {
+		console.log(data);
+		return new User(
+			data["name"],
+			EmergencyContact.fromData(data["emergencyContactOne"]),
+			EmergencyContact.fromData(data["emergencyContactTwo"]),
+		);
+	}
+}
+
+export class Alarm {
+	controllerId: string;
+
+	constructor(
+		controllerId: string
+	) {
+		this.controllerId = controllerId;
+	}
+
+	static fromData(data: any) {
+		return new Alarm(
+			data["controllerId"]
+		)
+	}
+}
+
+export class Controller {
+	userId: string;
+
+	constructor(
+		userId: string
+	) {
+		this.userId = userId;
+	}
+
+	static fromData(data: any) {
+		return new Controller(
+			data["userId"]
+		)
+	}
+}
 
 interface FirestoreOptions {
 	parser: (data: DocumentData) => any
@@ -31,6 +107,11 @@ interface FirestoreUpdate {
 const FirestoreContext: Context<ContextProps> = createContext<ContextProps>({} as ContextProps)
 
 interface ContextProps {
+	get: (
+		source: FirestoreSource,
+		id: string,
+		options?: FirestoreOptions,
+	) => Promise<any> | undefined,
 	getAll: (
 		source: FirestoreSource,
 		options?: FirestoreOptions
@@ -63,6 +144,14 @@ export default function FirestoreProvider({
 }) {
 	const firestore = getFirestore(firebase);
 
+	const get = async (
+		source: FirestoreSource,
+		id: string,
+		options: FirestoreOptions = defaultFirestoreOptions,
+	) => await getDoc(doc(firestore, source, id)).then(
+		(doc: DocumentSnapshot<DocumentData>) =>
+			doc.exists() ? options.parser(doc.data()) : null)
+
 	const getAll = async (
 		source: FirestoreSource,
 		options: FirestoreOptions = defaultFirestoreOptions,
@@ -71,7 +160,7 @@ export default function FirestoreProvider({
 	)).then((snapshot: QuerySnapshot<DocumentData>) =>
 		snapshot.docs.map(
 			(doc: QueryDocumentSnapshot<DocumentData>) =>
-				options.parser(doc.data)))
+				options.parser(doc.data())))
 
 	const getWhere = async (
 		source: FirestoreSource,
@@ -79,11 +168,11 @@ export default function FirestoreProvider({
 		options: FirestoreOptions = defaultFirestoreOptions
 	) => await getDocs(query(
 		collection(firestore, source),
-		where
+		where,
 	)).then((snapshot: QuerySnapshot<DocumentData>) =>
 		snapshot.docs.map(
 			(doc: QueryDocumentSnapshot<DocumentData>) =>
-				options.parser(doc.data)))
+				options.parser(doc.data())))
 
 	const update = async (
 		source: FirestoreSource,
@@ -119,6 +208,7 @@ export default function FirestoreProvider({
 	return (
 		<FirestoreContext.Provider
 			value={{
+				get,
 				getAll,
 				getWhere,
 				update,

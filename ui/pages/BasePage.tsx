@@ -1,5 +1,3 @@
-import { BaseFooter } from '@features/footer/BaseFooter';
-import { BaseHeader } from '@features/header/BaseHeader';
 import Head from 'next/head';
 import { Fragment } from 'react';
 import styled from 'styled-components';
@@ -23,11 +21,9 @@ export default function BasePage({
 				<Meta name="viewport" content="width=device-width, initial-scale=1" />
 				<Link rel="icon" href="/favicon.ico" />
 			</Head>
-			<BaseHeader />
 			<Main>
 				{children}
 			</Main>
-			<BaseFooter />
 		</Page>
 	);
 }
