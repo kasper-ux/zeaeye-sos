@@ -1,4 +1,5 @@
 import FirestoreSource from '@config/firestore';
+import { ContactCard } from '@ui/cards/ContactCard';
 import BasePage from '@ui/pages/BasePage'
 import { Alarm, Controller, User, useFirestore } from '@utils/providers/FirestoreProvider';
 import { limit, where } from 'firebase/firestore';
@@ -20,7 +21,6 @@ export default function ReplySosPage() {
 		const userId = await loadUserIdwithControllerId(controllerId)
 		if (userId == null) return;
 		console.log(userId)
-
 		loadUserDataWithUserId(userId);
 	}
 
@@ -53,7 +53,7 @@ export default function ReplySosPage() {
 
 	return (
 		<BasePage title={ReplySosPage.title}>
-			{user?.name}
+
 		</BasePage>
 	)
 }

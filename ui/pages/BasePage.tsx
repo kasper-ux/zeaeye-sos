@@ -31,6 +31,10 @@ export default function BasePage({
 const Main = styled.main`
 	display: flex;
 	flex-direction: column;
+	height: 100%;
+	width: 100%;
+	align-items: center;
+	justify-content: center;
 `
 
 const Title = styled.title``

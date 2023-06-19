@@ -20,18 +20,29 @@ import FirestoreSource from '../../config/firestore';
 
 export class EmergencyContact {
 	contactName: string;
+	contactPhone: string;
+	contactRelation: string;
 
-	constructor(
-		contactName: string
-	) {
+	constructor({
+		contactName,
+		contactPhone,
+		contactRelation,
+	}: {
+		contactName: string,
+		contactPhone: string,
+		contactRelation: string,
+	}) {
 		this.contactName = contactName;
+		this.contactPhone = contactPhone;
+		this.contactRelation = contactRelation;
 	}
 
 	static fromData(data: any) {
-		console.log(data)
-		return new EmergencyContact(
-			data["contactName"]
-		)
+		return new EmergencyContact({
+			contactName: data["contactName"],
+			contactPhone: data["contactPhone"],
+			contactRelation: data["relationType"],
+		})
 	}
 }
 
@@ -51,7 +62,6 @@ export class User {
 	};
 
 	static fromData(data: any) {
-		console.log(data);
 		return new User(
 			data["name"],
 			EmergencyContact.fromData(data["emergencyContactOne"]),
