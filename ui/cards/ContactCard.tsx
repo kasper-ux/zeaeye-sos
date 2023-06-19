@@ -1,17 +1,24 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { BaseCard } from './BaseCard';
-import { EmergencyContact, User } from '@utils/providers/FirestoreProvider';
+import { EmergencyContact, User, useFirestore } from '@utils/providers/FirestoreProvider';
 import { Skeleton } from '@ui/loading/Skeleton';
+import FirestoreSource from '@config/firestore';
 
 interface ContactCardProps {
 	contact?: EmergencyContact;
+	onUpdate?: (address?: string, age?: number) => Promise<void>;
 }
 
-export const ContactCard = ({ contact }: ContactCardProps) => {
-	const [address, setAddress] = useState<string>("");
-	const [age, setAge] = useState<string>("");
+export const ContactCard = ({ contact, onUpdate }: ContactCardProps) => {
+	const [address, setAddress] = useState<string>();
+	const [age, setAge] = useState<number>();
 	const [loading, setLoading] = useState<boolean>(false);
+
+	useEffect(() => {
+		if (contact?.address) setAddress(contact.address)
+		if (contact?.age) setAge(contact.age)
+	}, [contact])
 
 	const handleAddressChange = (e: any) => {
 		setAddress(e.target.value);
@@ -22,11 +29,21 @@ export const ContactCard = ({ contact }: ContactCardProps) => {
 	}
 
 	const handleDeny = async () => {
-		setLoading(true);
+		//setLoading(true);
 	}
 
 	const handleAccept = async () => {
 		setLoading(true);
+		if (onUpdate) {
+			await onUpdate(address, age).then(() => {
+				// todo: show success message
+			}).catch((e: any) => {
+				console.error(e);
+				// todo: show error message
+			}).finally(() => {
+				setLoading(false);
+			});
+		}
 	}
 
 	const getContactRelation = (relation: string) => {
@@ -53,20 +70,18 @@ export const ContactCard = ({ contact }: ContactCardProps) => {
 
 	}
 
-	if (!contact) {
-		return (
-			<ContactCardSkeleton />
-		)
-	}
+	if (!contact)
+		return <ContactCardSkeleton />
 
 	return (
 		<BaseCard>
-			<Content isLoading={loading}>
+			<Content
+				isLoading={loading}>
 				<ContactName>
 					{contact?.contactName}
 				</ContactName>
 				<ContactRelation>
-					{getContactRelation(contact?.contactRelation)}
+					{getContactRelation(contact?.relationType)}
 				</ContactRelation>
 				<ContactDetails>
 					<ContactPhone
@@ -84,30 +99,28 @@ export const ContactCard = ({ contact }: ContactCardProps) => {
 						onChange={handleAgeChange}
 						value={age} />
 				</ContactDetails>
-				{loading ?
-					<Actions>
+				<Actions>
+					{loading ?
 						<Skeleton
 							width={20}
 							height={2.5}>
 							<Loading>Gemmer oplysninger...</Loading>
 						</Skeleton>
-					</Actions>
-					:
-					<Actions>
-						<ActionDeny
-							onClick={handleDeny}
-							title="Afvis">
-							Afvis
-						</ActionDeny>
+						:
 						<ActionAccept
 							onClick={handleAccept}
 							title="Bekræft">
 							Bekræft nødkontakt
 						</ActionAccept>
-					</Actions>
-				}
+					}
+					<Spacer />
+					<ActionDeny
+						onClick={handleDeny}
+						title="Afvis">
+						Afvis nødkontakt
+					</ActionDeny>
+				</Actions>
 			</Content>
-			<Note>Nødkontakten bliver tilføjet til din profil.</Note>
 		</BaseCard>
 	);
 }
@@ -134,7 +147,7 @@ const ContactDetails = styled.div`
 const Input = styled.input`
 	padding: 0.8rem 1rem;
 	border: 0;
-	font-size: 1rem;
+	font-size: 0.8rem;
 	border-radius: 0.25rem;
 	background: #ffffff;
 	border: 1px solid #e7e7e7;
@@ -145,7 +158,7 @@ const Input = styled.input`
 `
 
 const ContactName = styled.div`
-	font-size: 1.8rem;
+	font-size: 1.6rem;
 	font-weight: 800;
 	margin: 0.25rem;
 	display: flex;
@@ -171,24 +184,21 @@ const ContactRelation = styled.div`
 	align-items: center;
 	justify-content: center;
 	text-align: center;
+	font-size: 0.9rem;
 `
 
 const Actions = styled.div`
 	display: flex;
-	flex-direction: row;
+	flex-direction: column;
 	justify-content: space-around;
 	width: 100%;
 	margin-top: 1rem;
 	position: sticky;
 	bottom: 0;
-	& > *:not(:last-child) {
-		margin-right: 1rem;
-	}
 `
 
 const Action = styled.button`
 	display: flex;
-	flex: 1;
 	align-items: center;
 	text-align: center;
 	justify-content: center;
@@ -204,12 +214,19 @@ const Action = styled.button`
 const ActionDeny = styled(Action)`
 	background: #ffffff;
 	color: #8c8c8c;
-	border: 1px solid #8c8c8c;
-	max-width: 6rem;
+	text-decoration: underline;
 `
 
 const ActionAccept = styled(Action)`
 	background: #009d37;
+	transition: all 0.3s ease;
+	&:hover {
+		filter: brightness(1.1);
+	}
+	&:active {
+		transform: scale(0.98);
+		filter: brightness(0.95);
+	}
 `
 
 const Note = styled.span`
@@ -218,9 +235,9 @@ const Note = styled.span`
 	font-size: 0.9rem;
 	text-align: center;
 `
-const Spacer = styled.div`
+const Spacer = styled.div<{ height?: number }>`
 	display: flex;
-	height: 0.5rem;
+	height: ${props => props.height ?? "0.5"}rem;
 `
 
 const Loading = styled.span`
@@ -230,25 +247,26 @@ const Loading = styled.span`
 
 const ContactCardSkeleton = () => (
 	<BaseCard>
-		<ContactName>
-			<Skeleton width={12} height={2.2} />
-		</ContactName>
-		<ContactRelation>
-			<Skeleton width={8} height={1.4} />
-		</ContactRelation>
-		<Spacer />
-		<Spacer />
-		<Skeleton width={20} height={2.5} />
-		<Spacer />
-		<Skeleton width={20} height={2.5} />
-		<Spacer />
-		<Skeleton width={20} height={2.5} />
-		<Actions>
-			<Skeleton width={8} height={2.5} />
+		<Content>
+			<ContactName>
+				<Skeleton width={12} height={1.9} />
+			</ContactName>
+			<Spacer height={0.5} />
+			<ContactRelation>
+				<Skeleton width={6} height={1} />
+			</ContactRelation>
+			<Spacer height={1} />
 			<Skeleton width={20} height={2.5} />
-		</Actions>
-		<Spacer />
-		<Spacer />
-		<Skeleton width={20} height={1.2} />
+			<Spacer />
+			<Skeleton width={20} height={2.5} />
+			<Spacer />
+			<Skeleton width={20} height={2.5} />
+			<Actions>
+				<Skeleton width={20} height={2.5} />
+			</Actions>
+			<Spacer height={1.25} />
+			<Skeleton width={6} height={1.2} />
+			<Spacer height={0.5} />
+		</Content>
 	</BaseCard>
 );

@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 export default function ContactPage() {
 	const [user, setUser] = useState<User>();
 	const [emergencyContact, setEmergencyContact] = useState<EmergencyContact>();
-	const { getWhere } = useFirestore();
+	const { getWhere, update } = useFirestore();
 	const { query } = useRouter();
 	const { userId, type } = query;
 
@@ -44,9 +44,31 @@ export default function ContactPage() {
 		}
 	}
 
+	const _getEmergencyContactLabel = (contactType?: string) => {
+		switch (contactType) {
+			case "1":
+				return "emergencyContactOne";
+			case "2":
+				return "emergencyContactTwo";
+			default:
+				return "emergencyContactOne";
+		}
+	}
+
+	const handleSaveContact = async (address?: string, age?: number) =>
+		await update(FirestoreSource.userData, `${user?.docId}`, {
+			[_getEmergencyContactLabel(type?.toString())]: {
+				...emergencyContact,
+				address: address ?? emergencyContact?.address,
+				age: age ?? emergencyContact?.age,
+			},
+		});
+
 	return (
 		<BasePage title={ContactPage.title}>
-			<ContactCard contact={emergencyContact} />
+			<ContactCard
+				onUpdate={handleSaveContact}
+				contact={emergencyContact} />
 		</BasePage>
 	)
 }

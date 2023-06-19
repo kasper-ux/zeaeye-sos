@@ -21,41 +21,64 @@ import FirestoreSource from '../../config/firestore';
 export class EmergencyContact {
 	contactName: string;
 	contactPhone: string;
-	contactRelation: string;
+	relationType: string;
+	otherDefinedRelation?: string;
+	phoneCode?: number;
+	address?: string;
+	age?: number;
 
 	constructor({
 		contactName,
 		contactPhone,
-		contactRelation,
+		relationType,
+		otherDefinedRelation,
+		phoneCode,
+		address,
+		age,
 	}: {
 		contactName: string,
 		contactPhone: string,
-		contactRelation: string,
+		relationType: string,
+		otherDefinedRelation?: string,
+		phoneCode?: number;
+		address?: string;
+		age?: number;
 	}) {
 		this.contactName = contactName;
 		this.contactPhone = contactPhone;
-		this.contactRelation = contactRelation;
+		this.relationType = relationType;
+		this.otherDefinedRelation = otherDefinedRelation;
+		this.phoneCode = phoneCode;
+		this.address = address;
+		this.age = age;
 	}
 
 	static fromData(data: any) {
 		return new EmergencyContact({
 			contactName: data["contactName"],
 			contactPhone: data["contactPhone"],
-			contactRelation: data["relationType"],
+			relationType: data["relationType"],
+			otherDefinedRelation: data["otherDefinedRelation"],
+			phoneCode: data["phoneCode"],
+			address: data["address"],
+			age: data["age"],
 		})
 	}
 }
 
 export class User {
+	docId: string;
 	name: string;
 	emergencyContactOne: EmergencyContact;
 	emergencyContactTwo: EmergencyContact;
 
 	constructor(
+		docId: string,
 		name: string,
 		emergencyContactOne: EmergencyContact,
 		emergencyContactTwo: EmergencyContact,
 	) {
+		this.docId = docId;
 		this.name = name;
 		this.emergencyContactOne = emergencyContactOne;
 		this.emergencyContactTwo = emergencyContactTwo;
@@ -63,6 +86,7 @@ export class User {
 
 	static fromData(data: any) {
 		return new User(
+			data["id"],
 			data["name"],
 			EmergencyContact.fromData(data["emergencyContactOne"]),
 			EmergencyContact.fromData(data["emergencyContactTwo"]),
@@ -134,7 +158,7 @@ interface ContextProps {
 	update: (
 		source: FirestoreSource,
 		id: string,
-		update: FirestoreUpdate,
+		update: any,
 	) => Promise<void>,
 	batchUpdate: (
 		source: FirestoreSource,
@@ -187,7 +211,7 @@ export default function FirestoreProvider({
 	const update = async (
 		source: FirestoreSource,
 		id: string,
-		update: FirestoreUpdate
+		update: any
 	) => await updateDoc(
 		doc(firestore, source, id),
 		update
