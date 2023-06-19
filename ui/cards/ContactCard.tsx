@@ -158,7 +158,7 @@ const Input = styled.input`
 `
 
 const ContactName = styled.div`
-	font-size: 1.6rem;
+	font-size: 1.4rem;
 	font-weight: 800;
 	margin: 0.25rem;
 	display: flex;
@@ -190,7 +190,8 @@ const ContactRelation = styled.div`
 const Actions = styled.div`
 	display: flex;
 	flex-direction: column;
-	justify-content: space-around;
+	justify-content: center;
+	align-items: center;
 	width: 100%;
 	margin-top: 1rem;
 	position: sticky;
@@ -215,11 +216,16 @@ const ActionDeny = styled(Action)`
 	background: #ffffff;
 	color: #8c8c8c;
 	text-decoration: underline;
+	width: 8rem;
+	&:hover {
+		color: #ff0000;
+	}
 `
 
 const ActionAccept = styled(Action)`
 	background: #009d37;
 	transition: all 0.3s ease;
+	width: 100%;
 	&:hover {
 		filter: brightness(1.1);
 	}
