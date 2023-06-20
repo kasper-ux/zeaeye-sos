@@ -63,7 +63,7 @@ export default function ContactPage() {
 		}
 	}
 
-	const handleSaveContact = async (address?: string, age?: number) =>
+	const handleSaveContact = async (address?: string, age?: string) =>
 		await update(FirestoreSource.emergencyContactConfirmations, `${user?.docId}`, {
 			[_getEmergencyContactLabel(type?.toString())]: {
 				address: address ?? emergencyContact?.address,

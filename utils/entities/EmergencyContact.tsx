@@ -5,7 +5,7 @@ export class EmergencyContact {
 	otherDefinedRelation?: string;
 	phoneCode?: number;
 	address?: string;
-	age?: number;
+	age?: string;
 
 	constructor({
 		contactName,
@@ -22,7 +22,7 @@ export class EmergencyContact {
 		otherDefinedRelation?: string,
 		phoneCode?: number;
 		address?: string;
-		age?: number;
+		age?: string;
 	}) {
 		this.contactName = contactName;
 		this.contactPhone = contactPhone;

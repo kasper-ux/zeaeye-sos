@@ -9,7 +9,7 @@ import { EmergencyContactConfirmationData } from '@utils/entities/EmergencyConta
 interface ContactCardProps {
 	contact?: EmergencyContact | null;
 	confirmation?: EmergencyContactConfirmationData;
-	onAccept?: (address?: string, age?: number) => Promise<void>;
+	onAccept?: (address?: string, age?: string) => Promise<void>;
 	onDeny?: () => Promise<void>;
 }
 
@@ -71,7 +71,7 @@ export const ContactCard = ({ contact, confirmation, onAccept, onDeny }: Contact
 	const handleAccept = async () => {
 		setLoading(true);
 		if (onAccept) {
-			await onAccept(address, parseInt(age)).then(() => {
+			await onAccept(address, age).then(() => {
 				setContactState(ContactState.accepted);
 				toast.success("Nødkontakt gemt!");
 			}).catch((e: any) => {
