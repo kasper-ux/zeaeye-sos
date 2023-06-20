@@ -1,7 +1,7 @@
 export class EmergencyContact {
-	contactName: string;
-	contactPhone: string;
-	relationType: string;
+	contactName?: string;
+	contactPhone?: string;
+	relationType?: string;
 	otherDefinedRelation?: string;
 	phoneCode?: number;
 	address?: string;
@@ -16,9 +16,9 @@ export class EmergencyContact {
 		address,
 		age,
 	}: {
-		contactName: string,
-		contactPhone: string,
-		relationType: string,
+		contactName?: string,
+		contactPhone?: string,
+		relationType?: string,
 		otherDefinedRelation?: string,
 		phoneCode?: number;
 		address?: string;
@@ -31,6 +31,10 @@ export class EmergencyContact {
 		this.phoneCode = phoneCode;
 		this.address = address;
 		this.age = age;
+	}
+
+	static empty() {
+		return new EmergencyContact({});
 	}
 
 	static fromData(data: any) {

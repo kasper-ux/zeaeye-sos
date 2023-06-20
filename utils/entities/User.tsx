@@ -19,12 +19,11 @@ export class User {
 	};
 
 	static fromData(data: any) {
-		console.log(data);
 		return new User(
 			data["docId"],
 			`${data["firstName"]} ${data["lastName"]}`,
-			data["emergencyContactOne"] ? EmergencyContact.fromData(data["emergencyContactOne"]) : null,
-			data["emergencyContactTwo"] ? EmergencyContact.fromData(data["emergencyContactTwo"]) : null,
+			data["emergencyContactOne"] ? EmergencyContact.fromData(data["emergencyContactOne"]) : EmergencyContact.empty(),
+			data["emergencyContactTwo"] ? EmergencyContact.fromData(data["emergencyContactTwo"]) : EmergencyContact.empty()
 		);
 	}
 }

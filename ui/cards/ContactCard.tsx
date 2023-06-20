@@ -16,7 +16,7 @@ interface ContactCardProps {
 export const ContactCard = ({ contact, confirmation, onAccept, onDeny }: ContactCardProps) => {
 	const [address, setAddress] = useState<string>("");
 	const [age, setAge] = useState<string>("");
-	const [loading, setLoading] = useState<boolean>(true);
+	const [loading, setLoading] = useState<boolean>(false);
 	const [isDirty, setDirty] = useState<boolean>(true);
 	const addressRef = useRef(null);
 	const ageRef = useRef(null);
@@ -80,7 +80,7 @@ export const ContactCard = ({ contact, confirmation, onAccept, onDeny }: Contact
 		//if (e.key)
 	}
 
-	const getContactRelation = (relation: string) => {
+	const getContactRelation = (relation?: string) => {
 		switch (relation) {
 			case "partner":
 				return 'Partner';
@@ -99,7 +99,7 @@ export const ContactCard = ({ contact, confirmation, onAccept, onDeny }: Contact
 			case "other":
 				return 'Anden';
 			default:
-				return relation;
+				return relation ?? "-";
 		}
 
 	}
@@ -113,7 +113,7 @@ export const ContactCard = ({ contact, confirmation, onAccept, onDeny }: Contact
 				isLoading={loading}>
 				<Header>
 					<Title>
-						{contact?.contactName}
+						{contact?.contactName ?? "Ukendt"}
 					</Title>
 					<Subtitle>
 						{getContactRelation(contact?.relationType)}
