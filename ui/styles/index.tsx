@@ -102,7 +102,7 @@ export const Button = styled.button`
 	text-align: center;
 	justify-content: center;
 	padding: 0rem 1rem;
-	height: 2.5rem;
+	height: 3rem;
 	border: 0;
 	color: #ffffff;
 	border-radius: 0.25rem;

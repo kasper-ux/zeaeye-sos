@@ -172,7 +172,8 @@ const ContactCardSkeleton = () => (
 			<Skeleton width={20} height={2.5} />
 			<Skeleton width={20} height={2.5} />
 			<Skeleton width={20} height={2.5} />
-			<Skeleton width={20} height={2.5} />
+			<Skeleton width={20} height={3} />
+			<Spacer height={0.5} />
 			<Skeleton width={6} height={1.2} />
 			<Spacer height={0.5} />
 		</CardContent>
