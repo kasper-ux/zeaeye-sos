@@ -33,15 +33,6 @@ export const ContactCard = ({ contact, confirmation, onAccept, onDeny }: Contact
 	}, [contact])
 
 	useEffect(() => {
-		if (!loading) {
-			setTimeout(() => {
-				//@ts-ignore
-				addressRef.current?.focus();
-			}, 500);
-		}
-	}, [loading])
-
-	useEffect(() => {
 		setContactState(ContactState.pending);
 	}, [address, age])
 
