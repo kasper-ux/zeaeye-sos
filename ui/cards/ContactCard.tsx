@@ -4,16 +4,19 @@ import { Skeleton } from '@ui/loading/Skeleton';
 import { toast } from 'react-hot-toast';
 import { CardContent, Header, Input, InputLabel, InputWrapper, LinkButton, Loading, PrimaryButton, Spacer, StateButton, Subtitle, Symbol, Title } from '@ui/styles';
 import { EmergencyContact } from '@utils/entities';
+import { EmergencyContactConfirmationData } from '@utils/entities/EmergencyContactConfirmation';
 
 interface ContactCardProps {
-	contact?: EmergencyContact;
-	onUpdate?: (address?: string, age?: number) => Promise<void>;
+	contact?: EmergencyContact | null;
+	confirmation?: EmergencyContactConfirmationData;
+	onAccept?: (address?: string, age?: number) => Promise<void>;
+	onDeny?: () => Promise<void>;
 }
 
-export const ContactCard = ({ contact, onUpdate }: ContactCardProps) => {
+export const ContactCard = ({ contact, confirmation, onAccept, onDeny }: ContactCardProps) => {
 	const [address, setAddress] = useState<string>("");
 	const [age, setAge] = useState<string>("");
-	const [loading, setLoading] = useState<boolean>(false);
+	const [loading, setLoading] = useState<boolean>(true);
 	const [isDirty, setDirty] = useState<boolean>(true);
 	const addressRef = useRef(null);
 	const ageRef = useRef(null);
@@ -22,6 +25,13 @@ export const ContactCard = ({ contact, onUpdate }: ContactCardProps) => {
 		if (contact?.address) setAddress(contact.address)
 		if (contact?.age) setAge(contact.age.toString())
 	}, [contact])
+
+	useEffect(() => {
+		if (!loading) {
+			//@ts-ignore
+			addressRef.current?.focus();
+		}
+	}, [loading])
 
 	useEffect(() => {
 		setDirty(true);
@@ -36,13 +46,24 @@ export const ContactCard = ({ contact, onUpdate }: ContactCardProps) => {
 	}
 
 	const handleDeny = async () => {
-		//setLoading(true);
+		setLoading(true);
+		if (onDeny) {
+			await onDeny().then(() => {
+				setDirty(false);
+				toast.success("Nødkontakt afvist");
+			}).catch((e: any) => {
+				console.error(e);
+				toast.error("Der skete en fejl... Prøv igen.");
+			}).finally(() => {
+				setLoading(false);
+			});
+		}
 	}
 
 	const handleAccept = async () => {
 		setLoading(true);
-		if (onUpdate) {
-			await onUpdate(address, parseInt(age)).then(() => {
+		if (onAccept) {
+			await onAccept(address, parseInt(age)).then(() => {
 				setDirty(false);
 				toast.success("Nødkontakt gemt!");
 			}).catch((e: any) => {

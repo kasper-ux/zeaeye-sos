@@ -2,6 +2,7 @@ import FirestoreSource from '@config/firestore';
 import { ContactCard } from '@ui/cards/ContactCard';
 import BasePage from '@ui/pages/BasePage'
 import { EmergencyContact, User } from '@utils/entities';
+import { EmergencyContactConfirmation, EmergencyContactConfirmationData } from '@utils/entities/EmergencyContactConfirmation';
 import { useFirestore } from '@utils/providers/FirestoreProvider';
 import { where } from 'firebase/firestore';
 import { useRouter } from 'next/router';
@@ -9,8 +10,9 @@ import { useEffect, useState } from 'react';
 
 export default function ContactPage() {
 	const [user, setUser] = useState<User>();
-	const [emergencyContact, setEmergencyContact] = useState<EmergencyContact>();
-	const { getWhere, update } = useFirestore();
+	const [emergencyContact, setEmergencyContact] = useState<EmergencyContact | null>();
+	const [confirmation, setConfirmantion] = useState<EmergencyContactConfirmationData>();
+	const { getWhere, update, get } = useFirestore();
 	const { query } = useRouter();
 	const { userId, type } = query;
 
@@ -23,25 +25,30 @@ export default function ContactPage() {
 	const loadUserDataWithUserDocId = async (userId: string, contactType: string) => {
 		try {
 			const userData = await getWhere(FirestoreSource.userData, where("userId", "==", userId));
-			if (userData != null) {
+			if (userData != null && userData.length > 0) {
 				const _user = User.fromData(userData.at(0));
-				const _emergencyContact = _getEmergencyContact(_user, contactType);
 				setUser(User.fromData(userData.at(0)))
-				setEmergencyContact(_emergencyContact);
+				setEmergencyContact(_user[_getEmergencyContactLabel(contactType)])
+				const _emergencyContactConfirmationData = await get(FirestoreSource.emergencyContactConfirmations, userId);
+				if (_emergencyContactConfirmationData != null) {
+					const _emergencyContactConfirmation = EmergencyContactConfirmation.fromData(_emergencyContactConfirmationData);
+					const _confirmation = _getEmergencyContact(_emergencyContactConfirmation, contactType);
+					setConfirmantion(_confirmation);
+				}
 			}
 		} catch (e) {
 			console.error(e)
 		}
 	}
 
-	const _getEmergencyContact = (user: User, contactType: string) => {
+	const _getEmergencyContact = (contact: EmergencyContactConfirmation, contactType: string) => {
 		switch (contactType) {
 			case "1":
-				return user.emergencyContactOne;
+				return contact.emergencyContactOne
 			case "2":
-				return user.emergencyContactTwo;
+				return contact.emergencyContactTwo;
 			default:
-				return user.emergencyContactOne;
+				return contact.emergencyContactOne;
 		}
 	}
 
@@ -57,19 +64,32 @@ export default function ContactPage() {
 	}
 
 	const handleSaveContact = async (address?: string, age?: number) =>
-		await update(FirestoreSource.userData, `${user?.docId}`, {
+		await update(FirestoreSource.emergencyContactConfirmations, `${user?.docId}`, {
 			[_getEmergencyContactLabel(type?.toString())]: {
-				...emergencyContact,
 				address: address ?? emergencyContact?.address,
 				age: age ?? emergencyContact?.age,
+				state: "approved",
+				userDocId: `${user?.docId}`
+			},
+		});
+
+	const handleDenyContact = async () =>
+		await update(FirestoreSource.emergencyContactConfirmations, `${user?.docId}`, {
+			[_getEmergencyContactLabel(type?.toString())]: {
+				address: emergencyContact?.address,
+				age: emergencyContact?.age,
+				state: "disapproved",
+				userDocId: `${user?.docId}`
 			},
 		});
 
 	return (
 		<BasePage title={ContactPage.title}>
 			<ContactCard
-				onUpdate={handleSaveContact}
-				contact={emergencyContact} />
+				onAccept={handleSaveContact}
+				onDeny={handleDenyContact}
+				contact={emergencyContact}
+				confirmation={confirmation} />
 		</BasePage>
 	)
 }
