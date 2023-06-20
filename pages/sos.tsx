@@ -29,7 +29,7 @@ export default function ReplySosPage() {
 			if (userId == null) return;
 			await loadUserDataWithUserId(userId);
 		} catch (e) {
-			setError("Alarmen er blevet afbrudt");
+			setError("Alarmen kunne ikke findes");
 		}
 	}
 
