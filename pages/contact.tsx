@@ -76,8 +76,8 @@ export default function ContactPage() {
 	const handleDenyContact = async () =>
 		await update(FirestoreSource.emergencyContactConfirmations, `${user?.docId}`, {
 			[_getEmergencyContactLabel(type?.toString())]: {
-				address: emergencyContact?.address,
-				age: emergencyContact?.age,
+				address: "",
+				age: "",
 				state: "disapproved",
 				userDocId: `${user?.docId}`
 			},

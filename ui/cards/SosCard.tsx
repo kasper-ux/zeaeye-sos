@@ -20,7 +20,7 @@ export const SosCard = ({ user, alarm, onCancel, error, reply }: SosCardProps) =
 	const handleSosDismiss = async () => {
 		if (onCancel) {
 			await onCancel().then(() => {
-				toast.success("")
+				toast.success("Tak for din feedback!")
 			}).finally(() => {
 				setLoading(false);
 			})

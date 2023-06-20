@@ -13,13 +13,19 @@ interface ContactCardProps {
 	onDeny?: () => Promise<void>;
 }
 
+enum ContactState {
+	accepted,
+	denied,
+	pending
+}
+
 export const ContactCard = ({ contact, confirmation, onAccept, onDeny }: ContactCardProps) => {
 	const [address, setAddress] = useState<string>("");
 	const [age, setAge] = useState<string>("");
 	const [loading, setLoading] = useState<boolean>(false);
-	const [isDirty, setDirty] = useState<boolean>(true);
 	const addressRef = useRef(null);
 	const ageRef = useRef(null);
+	const [contactState, setContactState] = useState<ContactState>(ContactState.pending);
 
 	useEffect(() => {
 		if (contact?.address) setAddress(contact.address)
@@ -34,7 +40,7 @@ export const ContactCard = ({ contact, confirmation, onAccept, onDeny }: Contact
 	}, [loading])
 
 	useEffect(() => {
-		setDirty(true);
+		setContactState(ContactState.pending);
 	}, [address, age])
 
 	const handleAddressChange = (e: any) => {
@@ -49,7 +55,7 @@ export const ContactCard = ({ contact, confirmation, onAccept, onDeny }: Contact
 		setLoading(true);
 		if (onDeny) {
 			await onDeny().then(() => {
-				setDirty(false);
+				setContactState(ContactState.denied);
 				toast.success("Nødkontakt afvist");
 			}).catch((e: any) => {
 				console.error(e);
@@ -64,7 +70,7 @@ export const ContactCard = ({ contact, confirmation, onAccept, onDeny }: Contact
 		setLoading(true);
 		if (onAccept) {
 			await onAccept(address, parseInt(age)).then(() => {
-				setDirty(false);
+				setContactState(ContactState.accepted);
 				toast.success("Nødkontakt gemt!");
 			}).catch((e: any) => {
 				console.error(e);
@@ -152,14 +158,7 @@ export const ContactCard = ({ contact, confirmation, onAccept, onDeny }: Contact
 						<Loading>Gemmer oplysninger...</Loading>
 					</Skeleton>
 					:
-					isDirty ?
-						<PrimaryButton
-							color="#009d37"
-							onClick={handleAccept}
-							title="Bekræft">
-							Bekræft nødkontakt
-						</PrimaryButton>
-						:
+					contactState == ContactState.accepted ?
 						<StateButton
 							title="Gemt">
 							Nødkontakt gemt
@@ -167,6 +166,21 @@ export const ContactCard = ({ contact, confirmation, onAccept, onDeny }: Contact
 								✔
 							</Symbol>
 						</StateButton>
+						: contactState == ContactState.denied ?
+							<StateButton
+								title="Gemt">
+								Nødkontakt afvist
+								<Symbol color="#ff0000">
+									✖
+								</Symbol>
+							</StateButton>
+							:
+							<PrimaryButton
+								color="#009d37"
+								onClick={handleAccept}
+								title="Bekræft">
+								Bekræft nødkontakt
+							</PrimaryButton>
 				}
 				<LinkButton
 					onClick={handleDeny}

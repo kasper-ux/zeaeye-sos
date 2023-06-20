@@ -79,7 +79,7 @@ export default function ReplySosPage() {
 			const _contactLabel = _getEmergencyContactLabel(type?.toString());
 			const _sosReply: SosReply = SosReply.fromData(sosReplyData);
 			setSosReply(_sosReply[_contactLabel]);
-			return await update(FirestoreSource.sosReplies, alarm?.docId!, {
+			return await update(FirestoreSource.sosReplies, alarm?.alarmId!, {
 				[_contactLabel]: {
 					..._sosReply[_contactLabel],
 					state: "disapproved",
@@ -88,6 +88,7 @@ export default function ReplySosPage() {
 			}).then(() => {
 				if (alarmId)
 					loadData(alarmId.toString());
+				return
 			});
 		});
 
