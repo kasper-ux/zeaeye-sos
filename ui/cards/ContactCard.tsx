@@ -50,7 +50,7 @@ export const ContactCard = ({ contact, confirmation, onAccept, onDeny }: Contact
 	}
 
 	const handleAgeChange = (e: any) => {
-		setAge(e.target.value);
+		setAge(e.target.value.toString());
 	}
 
 	const handleDeny = async () => {
