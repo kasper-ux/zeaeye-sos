@@ -1,7 +1,8 @@
 import FirestoreSource from '@config/firestore';
 import { ContactCard } from '@ui/cards/ContactCard';
 import BasePage from '@ui/pages/BasePage'
-import { EmergencyContact, User, useFirestore } from '@utils/providers/FirestoreProvider';
+import { EmergencyContact, User } from '@utils/entities';
+import { useFirestore } from '@utils/providers/FirestoreProvider';
 import { where } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -73,4 +74,4 @@ export default function ContactPage() {
 	)
 }
 
-ContactPage.title = "Bekræft SOS Kontakt"
+ContactPage.title = "Bekræft Nødkontakt"

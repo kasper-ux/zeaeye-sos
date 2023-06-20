@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { BaseCard } from './BaseCard';
 import { EmergencyContact, User, useFirestore } from '@utils/providers/FirestoreProvider';
 import { Skeleton } from '@ui/loading/Skeleton';
 import FirestoreSource from '@config/firestore';
+import { toast } from 'react-hot-toast';
+import { CardContent, Header, Input, InputLabel, InputWrapper, LinkButton, Loading, PrimaryButton, Spacer, StateButton, Subtitle, Symbol, Title } from '@ui/styles';
 
 interface ContactCardProps {
 	contact?: EmergencyContact;
@@ -11,14 +13,21 @@ interface ContactCardProps {
 }
 
 export const ContactCard = ({ contact, onUpdate }: ContactCardProps) => {
-	const [address, setAddress] = useState<string>();
-	const [age, setAge] = useState<number>();
+	const [address, setAddress] = useState<string>("");
+	const [age, setAge] = useState<string>("");
 	const [loading, setLoading] = useState<boolean>(false);
+	const [isDirty, setDirty] = useState<boolean>(true);
+	const addressRef = useRef(null);
+	const ageRef = useRef(null);
 
 	useEffect(() => {
 		if (contact?.address) setAddress(contact.address)
-		if (contact?.age) setAge(contact.age)
+		if (contact?.age) setAge(contact.age.toString())
 	}, [contact])
+
+	useEffect(() => {
+		setDirty(true);
+	}, [address, age])
 
 	const handleAddressChange = (e: any) => {
 		setAddress(e.target.value);
@@ -35,15 +44,21 @@ export const ContactCard = ({ contact, onUpdate }: ContactCardProps) => {
 	const handleAccept = async () => {
 		setLoading(true);
 		if (onUpdate) {
-			await onUpdate(address, age).then(() => {
-				// todo: show success message
+			await onUpdate(address, parseInt(age)).then(() => {
+				setDirty(false);
+				toast.success("Nødkontakt gemt!");
 			}).catch((e: any) => {
 				console.error(e);
-				// todo: show error message
+				toast.error("Der skete en fejl... Prøv igen.");
 			}).finally(() => {
 				setLoading(false);
 			});
 		}
+	}
+
+	const handleKeyUp = (e: any) => {
+		console.log(e)
+		//if (e.key)
 	}
 
 	const getContactRelation = (relation: string) => {
@@ -75,204 +90,93 @@ export const ContactCard = ({ contact, onUpdate }: ContactCardProps) => {
 
 	return (
 		<BaseCard>
-			<Content
+			<CardContent
 				isLoading={loading}>
-				<ContactName>
-					{contact?.contactName}
-				</ContactName>
-				<ContactRelation>
-					{getContactRelation(contact?.relationType)}
-				</ContactRelation>
-				<ContactDetails>
-					<ContactPhone
-						value={contact?.contactPhone}
-						disabled />
-					<Spacer />
-					<ContactAddress
-						placeholder="Tilføj adresse (valgfri)"
-						onChange={handleAddressChange}
-						value={address} />
-					<Spacer />
-					<ContactAge
+				<Header>
+					<Title>
+						{contact?.contactName}
+					</Title>
+					<Subtitle>
+						{getContactRelation(contact?.relationType)}
+					</Subtitle>
+				</Header>
+				<Input
+					value={contact?.contactPhone}
+					disabled />
+				<Input
+					onKeyUp={handleKeyUp}
+					ref={addressRef}
+					tabIndex={1}
+					autoFocus
+					autoComplete="street-address"
+					placeholder="Tilføj adresse (valgfri)"
+					onChange={handleAddressChange}
+					value={address} />
+				<InputWrapper>
+					<InputLabel>
+						Alder
+					</InputLabel>
+					<Input
+						ref={ageRef}
+						tabIndex={2}
+						min={12}
+						max={99}
 						type="number"
-						placeholder="Alder (valgfri)"
+						placeholder="(valgfri)"
 						onChange={handleAgeChange}
 						value={age} />
-				</ContactDetails>
-				<Actions>
-					{loading ?
-						<Skeleton
-							width={20}
-							height={2.5}>
-							<Loading>Gemmer oplysninger...</Loading>
-						</Skeleton>
-						:
-						<ActionAccept
+				</InputWrapper>
+				{loading ?
+					<Skeleton
+						width={20}
+						height={2.5}>
+						<Loading>Gemmer oplysninger...</Loading>
+					</Skeleton>
+					:
+					isDirty ?
+						<PrimaryButton
+							color="#009d37"
 							onClick={handleAccept}
 							title="Bekræft">
 							Bekræft nødkontakt
-						</ActionAccept>
-					}
-					<Spacer />
-					<ActionDeny
-						onClick={handleDeny}
-						title="Afvis">
-						Afvis nødkontakt
-					</ActionDeny>
-				</Actions>
-			</Content>
+						</PrimaryButton>
+						:
+						<StateButton
+							title="Gemt">
+							Nødkontakt gemt
+							<Symbol color="#009d37">
+								✔
+							</Symbol>
+						</StateButton>
+				}
+				<LinkButton
+					onClick={handleDeny}
+					title="Afvis">
+					Afvis nødkontakt
+				</LinkButton>
+			</CardContent>
 		</BaseCard>
 	);
 }
 
-const Content = styled.div<{ isLoading?: boolean }>`
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	position: relative;
-	justify-content: center;
-	width: 100%;
-	opacity: ${props => props.isLoading ? "0.5" : "1.0"};
-	pointer-events: ${props => props.isLoading ? "none" : "all"};
-`
-
-const ContactDetails = styled.div`
-	display: flex;
-	flex-direction: column;
-	width: 100%;
-	margin-top: 1rem;
-	position: relative;
-`
-
-const Input = styled.input`
-	padding: 0.8rem 1rem;
-	border: 0;
-	font-size: 0.8rem;
-	border-radius: 0.25rem;
-	background: #ffffff;
-	border: 1px solid #e7e7e7;
-	&:disabled {
-		background: #e7e7e7;
-		box-shadow: none;
-	}
-`
-
-const ContactName = styled.div`
-	font-size: 1.4rem;
-	font-weight: 800;
-	margin: 0.25rem;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	text-align: center;
-`
-
-const ContactPhone = styled(Input)`
-	
-`
-
-const ContactAge = styled(Input)`
-
-`
-
-const ContactAddress = styled(Input)`
-
-`
-
-const ContactRelation = styled.div`
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	text-align: center;
-	font-size: 0.9rem;
-`
-
-const Actions = styled.div`
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	width: 100%;
-	margin-top: 1rem;
-	position: sticky;
-	bottom: 0;
-`
-
-const Action = styled.button`
-	display: flex;
-	align-items: center;
-	text-align: center;
-	justify-content: center;
-	padding: 0rem 1rem;
-	height: 2.5rem;
-	border: 0;
-	color: #ffffff;
-	border-radius: 0.25rem;
-	cursor: pointer;
-	font-weight: 500;
-`
-
-const ActionDeny = styled(Action)`
-	background: #ffffff;
-	color: #8c8c8c;
-	text-decoration: underline;
-	width: 8rem;
-	&:hover {
-		color: #ff0000;
-	}
-`
-
-const ActionAccept = styled(Action)`
-	background: #009d37;
-	transition: all 0.3s ease;
-	width: 100%;
-	&:hover {
-		filter: brightness(1.1);
-	}
-	&:active {
-		transform: scale(0.98);
-		filter: brightness(0.95);
-	}
-`
-
-const Note = styled.span`
-	color: #8a8a8a;
-	margin-top: 1rem;
-	font-size: 0.9rem;
-	text-align: center;
-`
-const Spacer = styled.div<{ height?: number }>`
-	display: flex;
-	height: ${props => props.height ?? "0.5"}rem;
-`
-
-const Loading = styled.span`
-	font-size: 0.8rem;
-	font-weight: 500;
-`
-
 const ContactCardSkeleton = () => (
 	<BaseCard>
-		<Content>
-			<ContactName>
-				<Skeleton width={12} height={1.9} />
-			</ContactName>
-			<Spacer height={0.5} />
-			<ContactRelation>
-				<Skeleton width={6} height={1} />
-			</ContactRelation>
-			<Spacer height={1} />
+		<CardContent>
+			<Header>
+				<Title>
+					<Skeleton width={12} height={1.8} />
+				</Title>
+				<Spacer height={0.5} />
+				<Subtitle>
+					<Skeleton width={6} height={1} />
+				</Subtitle>
+			</Header>
 			<Skeleton width={20} height={2.5} />
-			<Spacer />
 			<Skeleton width={20} height={2.5} />
-			<Spacer />
 			<Skeleton width={20} height={2.5} />
-			<Actions>
-				<Skeleton width={20} height={2.5} />
-			</Actions>
-			<Spacer height={1.25} />
+			<Skeleton width={20} height={2.5} />
 			<Skeleton width={6} height={1.2} />
 			<Spacer height={0.5} />
-		</Content>
+		</CardContent>
 	</BaseCard>
 );

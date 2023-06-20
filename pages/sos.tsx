@@ -1,37 +1,46 @@
 import FirestoreSource from '@config/firestore';
-import { ContactCard } from '@ui/cards/ContactCard';
+import { SosCard } from '@ui/cards/SosCard';
 import BasePage from '@ui/pages/BasePage'
-import { Alarm, Controller, User, useFirestore } from '@utils/providers/FirestoreProvider';
-import { limit, where } from 'firebase/firestore';
+import { Alarm, Controller, SosReply, SosReplyData, User } from '@utils/entities';
+import { useFirestore } from '@utils/providers/FirestoreProvider';
+import { where } from 'firebase/firestore';
+import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react'
 
 export default function ReplySosPage() {
-	const { getWhere, get } = useFirestore();
+	const { getWhere, get, update } = useFirestore();
 	const [user, setUser] = useState<User>();
+	const [alarm, setAlarm] = useState<Alarm>();
+	const [sosReply, setSosReply] = useState<SosReplyData>();
+	const { query } = useRouter();
+	const { alarmId, type } = query;
+	const [error, setError] = useState<string>();
 
 	useEffect(() => {
-		loadData();
-	}, [])
+		if (alarmId)
+			loadData(alarmId.toString());
+	}, [alarmId])
 
-	const loadData = async () => {
-		const controllerId: string = await loadControllerId("alarmId");
-		if (controllerId == null) return;
-		console.log(controllerId)
-
-		const userId = await loadUserIdwithControllerId(controllerId)
-		if (userId == null) return;
-		console.log(userId)
-		loadUserDataWithUserId(userId);
+	const loadData = async (id: string) => {
+		try {
+			const controllerId: string | null = await loadControllerIdFromAlarmId(id);
+			if (controllerId == null) return;
+			const userId = await loadUserIdwithControllerId(controllerId)
+			if (userId == null) return;
+			await loadUserDataWithUserId(userId);
+		} catch (e) {
+			setError("Alarmen er blevet afbrudt");
+		}
 	}
 
-	const loadControllerId = async (alarmId: string) => {
+	const loadControllerIdFromAlarmId = async (alarmId: string) => {
 		const alarmData = await getWhere(FirestoreSource.deviceAlarms, where("alarmId", "==", alarmId));
 		if (alarmData != null) {
 			const alarm: Alarm = Alarm.fromData(alarmData.at(0));
-			console.log(alarm)
+			setAlarm(alarm);
 			return alarm.controllerId;
 		}
-		return "";
+		return null;
 	}
 
 	const loadUserIdwithControllerId = async (controllerId: string) => {
@@ -39,8 +48,9 @@ export default function ReplySosPage() {
 		if (controllerData) {
 			const controller = Controller.fromData(controllerData);
 			const userId: string = controller.userId;
-			console.log(userId);
+			return userId;
 		}
+		return null;
 	}
 
 	const loadUserDataWithUserId = async (userId: string) => {
@@ -51,11 +61,46 @@ export default function ReplySosPage() {
 		}
 	}
 
+	const _getEmergencyContactLabel = (contactType?: string) => {
+		switch (contactType) {
+			case "cba":
+				return "user";
+			case "efd":
+				return "emergencyContactOne";
+			case "ihg":
+				return "emergencyContactTwo";
+			default:
+				return "emergencyContactOne";
+		}
+	}
+
+	const handleCancelAlarm = async () =>
+		await get(FirestoreSource.sosReplies, alarm?.alarmId!)?.then(async (sosReplyData: any) => {
+			const _contactLabel = _getEmergencyContactLabel(type?.toString());
+			const _sosReply: SosReply = SosReply.fromData(sosReplyData);
+			setSosReply(_sosReply[_contactLabel]);
+			return await update(FirestoreSource.sosReplies, alarm?.docId!, {
+				[_contactLabel]: {
+					..._sosReply[_contactLabel],
+					state: "disapproved",
+					timestamp: new Date().toISOString(),
+				},
+			}).then(() => {
+				if (alarmId)
+					loadData(alarmId.toString());
+			});
+		});
+
 	return (
 		<BasePage title={ReplySosPage.title}>
-
+			<SosCard
+				error={error}
+				user={user}
+				alarm={alarm}
+				reply={sosReply}
+				onCancel={handleCancelAlarm} />
 		</BasePage>
 	)
 }
 
-ReplySosPage.title = "Reply Sos"
+ReplySosPage.title = "SOS"

@@ -18,114 +18,6 @@ import {
 import firebase from '../../config/firebase';
 import FirestoreSource from '../../config/firestore';
 
-export class EmergencyContact {
-	contactName: string;
-	contactPhone: string;
-	relationType: string;
-	otherDefinedRelation?: string;
-	phoneCode?: number;
-	address?: string;
-	age?: number;
-
-	constructor({
-		contactName,
-		contactPhone,
-		relationType,
-		otherDefinedRelation,
-		phoneCode,
-		address,
-		age,
-	}: {
-		contactName: string,
-		contactPhone: string,
-		relationType: string,
-		otherDefinedRelation?: string,
-		phoneCode?: number;
-		address?: string;
-		age?: number;
-	}) {
-		this.contactName = contactName;
-		this.contactPhone = contactPhone;
-		this.relationType = relationType;
-		this.otherDefinedRelation = otherDefinedRelation;
-		this.phoneCode = phoneCode;
-		this.address = address;
-		this.age = age;
-	}
-
-	static fromData(data: any) {
-		return new EmergencyContact({
-			contactName: data["contactName"],
-			contactPhone: data["contactPhone"],
-			relationType: data["relationType"],
-			otherDefinedRelation: data["otherDefinedRelation"],
-			phoneCode: data["phoneCode"],
-			address: data["address"],
-			age: data["age"],
-		})
-	}
-}
-
-export class User {
-	docId: string;
-	name: string;
-	emergencyContactOne: EmergencyContact;
-	emergencyContactTwo: EmergencyContact;
-
-	constructor(
-		docId: string,
-		name: string,
-		emergencyContactOne: EmergencyContact,
-		emergencyContactTwo: EmergencyContact,
-	) {
-		this.docId = docId;
-		this.name = name;
-		this.emergencyContactOne = emergencyContactOne;
-		this.emergencyContactTwo = emergencyContactTwo;
-	};
-
-	static fromData(data: any) {
-		return new User(
-			data["id"],
-			data["name"],
-			EmergencyContact.fromData(data["emergencyContactOne"]),
-			EmergencyContact.fromData(data["emergencyContactTwo"]),
-		);
-	}
-}
-
-export class Alarm {
-	controllerId: string;
-
-	constructor(
-		controllerId: string
-	) {
-		this.controllerId = controllerId;
-	}
-
-	static fromData(data: any) {
-		return new Alarm(
-			data["controllerId"]
-		)
-	}
-}
-
-export class Controller {
-	userId: string;
-
-	constructor(
-		userId: string
-	) {
-		this.userId = userId;
-	}
-
-	static fromData(data: any) {
-		return new Controller(
-			data["userId"]
-		)
-	}
-}
-
 interface FirestoreOptions {
 	parser: (data: DocumentData) => any
 }
@@ -184,7 +76,7 @@ export default function FirestoreProvider({
 		options: FirestoreOptions = defaultFirestoreOptions,
 	) => await getDoc(doc(firestore, source, id)).then(
 		(doc: DocumentSnapshot<DocumentData>) =>
-			doc.exists() ? options.parser(doc.data()) : null)
+			doc.exists() ? options.parser({ ...doc.data(), docId: doc.id }) : null)
 
 	const getAll = async (
 		source: FirestoreSource,
@@ -194,7 +86,7 @@ export default function FirestoreProvider({
 	)).then((snapshot: QuerySnapshot<DocumentData>) =>
 		snapshot.docs.map(
 			(doc: QueryDocumentSnapshot<DocumentData>) =>
-				options.parser(doc.data())))
+				options.parser({ ...doc.data(), docId: doc.id })))
 
 	const getWhere = async (
 		source: FirestoreSource,
@@ -206,7 +98,7 @@ export default function FirestoreProvider({
 	)).then((snapshot: QuerySnapshot<DocumentData>) =>
 		snapshot.docs.map(
 			(doc: QueryDocumentSnapshot<DocumentData>) =>
-				options.parser(doc.data())))
+				options.parser({ ...doc.data(), docId: doc.id })))
 
 	const update = async (
 		source: FirestoreSource,
