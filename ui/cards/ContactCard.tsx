@@ -1,11 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import styled from 'styled-components';
 import { BaseCard } from './BaseCard';
-import { EmergencyContact, User, useFirestore } from '@utils/providers/FirestoreProvider';
 import { Skeleton } from '@ui/loading/Skeleton';
-import FirestoreSource from '@config/firestore';
 import { toast } from 'react-hot-toast';
 import { CardContent, Header, Input, InputLabel, InputWrapper, LinkButton, Loading, PrimaryButton, Spacer, StateButton, Subtitle, Symbol, Title } from '@ui/styles';
+import { EmergencyContact } from '@utils/entities';
 
 interface ContactCardProps {
 	contact?: EmergencyContact;
