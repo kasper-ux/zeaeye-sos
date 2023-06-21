@@ -76,6 +76,8 @@ export const InputLabel = styled.div`
 export const Header = styled.div`
 	display: flex;
 	flex-direction: column;
+	width: 100%;
+	position: relative;
 	padding-bottom: 0.5rem;
 `
 
@@ -86,6 +88,8 @@ export const Title = styled.div`
 	align-items: center;
 	justify-content: center;
 	text-align: center;
+	width: 100%;
+	position: relative;
 `
 
 export const Subtitle = styled.div`
@@ -94,6 +98,8 @@ export const Subtitle = styled.div`
 	justify-content: center;
 	text-align: center;
 	font-size: 0.9rem;
+	position: relative;
+	width: 100%;
 `
 
 export const Button = styled.button`

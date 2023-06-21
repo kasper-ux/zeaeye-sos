@@ -75,8 +75,10 @@ export const ContactCard = ({ contact, confirmation, onAccept, onDeny }: Contact
 	}
 
 	const handleKeyUp = (e: any) => {
-		console.log(e)
-		//if (e.key)
+		if (e.code == "Enter" || e.keyCode == 13) {
+			//@ts-ignore
+			ageRef.current?.focus();
+		}
 	}
 
 	const getContactRelation = (relation?: string) => {

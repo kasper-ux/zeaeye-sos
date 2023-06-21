@@ -35,7 +35,8 @@ const Container = styled.div<{
 	height?: number,
 }>`
 	background: #ededed;
-	width: ${props => props.width}rem;
+	width: 100%;
+	max-width: ${props => props.width}rem;
 	height: ${props => props.height}rem;
 	position: relative;
 	display: flex;
