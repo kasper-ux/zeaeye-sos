@@ -8,7 +8,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react'
 
 export default function ReplySosPage() {
-	const { getWhere, get, update, useServerTimestamp } = useFirestore();
+	const { getWhere, get, update, serverTimestamp } = useFirestore();
 	const [user, setUser] = useState<User>();
 	const [alarm, setAlarm] = useState<Alarm>();
 	const [sosReply, setSosReply] = useState<SosReplyData>();
@@ -83,7 +83,7 @@ export default function ReplySosPage() {
 				[_contactLabel]: {
 					..._sosReply[_contactLabel],
 					state: "disapproved",
-					timestamp: useServerTimestamp(),
+					timestamp: serverTimestamp(),
 				},
 			}).then(() => {
 				if (alarmId)
@@ -99,7 +99,7 @@ export default function ReplySosPage() {
 				[_contactLabel]: {
 					...sosReply,
 					comment: comment,
-					timestamp: useServerTimestamp(),
+					timestamp: serverTimestamp(),
 				},
 			})
 		}

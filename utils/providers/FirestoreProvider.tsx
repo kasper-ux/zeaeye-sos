@@ -62,7 +62,7 @@ interface ContextProps {
 		source: FirestoreSource,
 		data: FirestoreUpdate
 	) => Promise<DocumentData>,
-	useServerTimestamp: () => Timestamp,
+	serverTimestamp: () => Timestamp,
 }
 
 export default function FirestoreProvider({
@@ -133,7 +133,7 @@ export default function FirestoreProvider({
 		data
 	);
 
-	const useServerTimestamp = () =>
+	const serverTimestamp = () =>
 		Timestamp.fromDate(new Date());
 
 	return (
@@ -145,7 +145,7 @@ export default function FirestoreProvider({
 				update,
 				batchUpdate,
 				create,
-				useServerTimestamp,
+				serverTimestamp,
 			}}>
 			{children}
 		</FirestoreContext.Provider>
