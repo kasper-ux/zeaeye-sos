@@ -13,7 +13,8 @@ import {
 	getFirestore,
 	query,
 	updateDoc,
-	writeBatch
+	writeBatch,
+	Timestamp,
 } from "firebase/firestore";
 import firebase from '../../config/firebase';
 import FirestoreSource from '../../config/firestore';
@@ -60,7 +61,8 @@ interface ContextProps {
 	create: (
 		source: FirestoreSource,
 		data: FirestoreUpdate
-	) => Promise<DocumentData>
+	) => Promise<DocumentData>,
+	useServerTimestamp: () => Timestamp,
 }
 
 export default function FirestoreProvider({
@@ -131,6 +133,9 @@ export default function FirestoreProvider({
 		data
 	);
 
+	const useServerTimestamp = () =>
+		Timestamp.fromDate(new Date());
+
 	return (
 		<FirestoreContext.Provider
 			value={{
@@ -140,6 +145,7 @@ export default function FirestoreProvider({
 				update,
 				batchUpdate,
 				create,
+				useServerTimestamp,
 			}}>
 			{children}
 		</FirestoreContext.Provider>

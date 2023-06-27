@@ -27,17 +27,20 @@ export class SosReplyData {
 	receiver: string;
 	state: string;
 	timestamp: string;
+	comment: string;
 
 	constructor(
 		alarmId: string,
 		receiver: string,
 		state: string,
 		timestamp: string,
+		comment: string,
 	) {
 		this.alarmId = alarmId;
 		this.receiver = receiver;
 		this.state = state;
 		this.timestamp = timestamp;
+		this.comment = comment;
 	};
 
 	static fromData(data: any) {
@@ -46,6 +49,7 @@ export class SosReplyData {
 			data["receiver"],
 			data["state"],
 			data["timestamp"],
+			data["comment"] ?? "",
 		)
 	}
 }
