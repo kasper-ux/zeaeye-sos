@@ -92,6 +92,19 @@ export default function ReplySosPage() {
 			});
 		});
 
+	const handleComment = async (comment: string) => {
+		if (sosReply) {
+			const _contactLabel = _getEmergencyContactLabel(type?.toString());
+			return await update(FirestoreSource.sosReplies, alarm?.alarmId!, {
+				[_contactLabel]: {
+					...sosReply,
+					comment: comment,
+					timestamp: new Date().toISOString(),
+				},
+			})
+		}
+	}
+
 	return (
 		<BasePage title={ReplySosPage.title}>
 			<SosCard
@@ -99,7 +112,8 @@ export default function ReplySosPage() {
 				user={user}
 				alarm={alarm}
 				reply={sosReply}
-				onCancel={handleCancelAlarm} />
+				onCancel={handleCancelAlarm}
+				onComment={handleComment} />
 		</BasePage>
 	)
 }

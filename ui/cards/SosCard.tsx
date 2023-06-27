@@ -5,26 +5,38 @@ import { CardContent, Error, Header, InfoCard, Input, InputLabel, InputWrapper, 
 import { Skeleton } from '@ui/loading/Skeleton';
 import { Alarm, SosReply, SosReplyData, User } from '@utils/entities';
 import { toast } from 'react-hot-toast';
+import { DescriptionInput } from '@ui/inputs/DescriptionInput';
 
 interface SosCardProps {
 	user?: User
 	alarm?: Alarm,
 	onCancel: () => Promise<void>,
+	onComment: (comment: string) => Promise<void>,
 	error?: string,
 	reply?: SosReplyData,
 }
 
-export const SosCard = ({ user, alarm, onCancel, error, reply }: SosCardProps) => {
+export const SosCard = ({ user, alarm, onCancel, onComment, error, reply }: SosCardProps) => {
 	const [loading, setLoading] = useState<boolean>(false);
+	const [comment, setComment] = useState<string>("");
 
 	const handleSosDismiss = async () => {
-		if (onCancel) {
-			await onCancel().then(() => {
-				toast.success("Tak for din feedback!")
-			}).finally(() => {
-				setLoading(false);
-			})
-		}
+		setLoading(true);
+		await onCancel().then(() => {
+			toast.success("Tak for din feedback!")
+		}).finally(() => {
+			setLoading(false);
+		})
+	}
+
+	const handleAddComment = async () => {
+		setLoading(true);
+		await onComment(comment).then(() => {
+			toast.success("Din kommentar blev tilføjet!")
+			setComment("");
+		}).finally(() => {
+			setLoading(false);
+		})
 	}
 
 	return (
@@ -50,13 +62,26 @@ export const SosCard = ({ user, alarm, onCancel, error, reply }: SosCardProps) =
 						</Skeleton>
 					}
 				</InfoCard>
+				{reply?.state == "disapproved" &&
+					<DescriptionInput
+						onChange={setComment}
+						placeholder='Angiv begrundelse for afmeldelsen...' />
+				}
 				{reply?.state == "disapproved" ?
-					<StateButton
-						disabled
-						color="#fd0909"
-						title="Falsk alarm">
-						Du har meldt alarmen falsk
-					</StateButton>
+					comment.length > 0 ?
+						<PrimaryButton
+							color="#0073f6"
+							onClick={handleAddComment}
+							title="Tilføj kommentar">
+							Tilføj kommentar
+						</PrimaryButton>
+						:
+						<StateButton
+							disabled
+							color="#fd0909"
+							title="Falsk alarm">
+							Du har meldt alarmen falsk
+						</StateButton>
 					:
 					<PrimaryButton
 						disabled={(alarm == null || user == null)}

@@ -23,6 +23,7 @@ export const InfoCard = styled.div`
 	align-items: center;
 	justify-content: center;
 	width: 100%;
+	overflow: hidden;
 `
 
 export const Input = styled.input`
