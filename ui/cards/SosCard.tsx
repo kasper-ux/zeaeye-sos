@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { BaseCard } from './BaseCard';
 import { CardContent, Error, Header, InfoCard, Input, InputLabel, InputWrapper, LinkButton, Loading, Note, PrimaryButton, StateButton, Subtitle, Symbol, Title } from '@ui/styles';
@@ -10,15 +10,22 @@ import { DescriptionInput } from '@ui/inputs/DescriptionInput';
 interface SosCardProps {
 	user?: User
 	alarm?: Alarm,
+	initialComment?: string,
 	onCancel: () => Promise<void>,
 	onComment: (comment: string) => Promise<void>,
 	error?: string,
 	reply?: SosReplyData,
 }
 
-export const SosCard = ({ user, alarm, onCancel, onComment, error, reply }: SosCardProps) => {
+export const SosCard = ({ user, alarm, initialComment, onCancel, onComment, error, reply }: SosCardProps) => {
 	const [loading, setLoading] = useState<boolean>(false);
 	const [comment, setComment] = useState<string>("");
+
+	useEffect(() => {
+		if (initialComment) {
+
+		}
+	}, [])
 
 	const handleSosDismiss = async () => {
 		setLoading(true);
@@ -64,6 +71,7 @@ export const SosCard = ({ user, alarm, onCancel, onComment, error, reply }: SosC
 				</InfoCard>
 				{reply?.state == "disapproved" &&
 					<DescriptionInput
+						initialValue={initialComment}
 						onChange={setComment}
 						placeholder='Angiv begrundelse for afmeldelsen...' />
 				}

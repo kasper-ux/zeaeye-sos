@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { BaseInput } from './BaseInput';
 import { InfoCard } from '@ui/styles';
@@ -6,9 +6,10 @@ import { InfoCard } from '@ui/styles';
 interface DescriptionInputProps {
 	placeholder?: string,
 	onChange?: (value: string) => void,
+	initialValue?: string,
 }
 
-export const DescriptionInput = ({ placeholder, onChange }: DescriptionInputProps) => {
+export const DescriptionInput = ({ placeholder, onChange, initialValue }: DescriptionInputProps) => {
 
 	const handleChange = (e: any) => {
 		if (onChange) {
@@ -21,7 +22,9 @@ export const DescriptionInput = ({ placeholder, onChange }: DescriptionInputProp
 			<TextArea
 				placeholder={placeholder}
 				onChange={handleChange}
-				autoFocus />
+				autoFocus >
+				{initialValue}
+			</TextArea>
 		</Content>
 	);
 }

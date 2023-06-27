@@ -112,6 +112,7 @@ export default function ReplySosPage() {
 				user={user}
 				alarm={alarm}
 				reply={sosReply}
+				initialComment={sosReply?.comment}
 				onCancel={handleCancelAlarm}
 				onComment={handleComment} />
 		</BasePage>
