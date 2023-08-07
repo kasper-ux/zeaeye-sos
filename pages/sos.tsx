@@ -3,12 +3,12 @@ import { SosCard } from '@ui/cards/SosCard';
 import BasePage from '@ui/pages/BasePage'
 import { Alarm, Controller, SosReply, SosReplyData, User } from '@utils/entities';
 import { useFirestore } from '@utils/providers/FirestoreProvider';
-import { where } from 'firebase/firestore';
+import { DocumentData, DocumentSnapshot, Unsubscribe, doc, onSnapshot, where } from 'firebase/firestore';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 export default function ReplySosPage() {
-	const { getWhere, get, update, serverTimestamp } = useFirestore();
+	const { getWhere, get, update, serverTimestamp, listenFor } = useFirestore();
 	const [user, setUser] = useState<User>();
 	const [alarm, setAlarm] = useState<Alarm>();
 	const [sosReply, setSosReply] = useState<SosReplyData>();
@@ -16,24 +16,28 @@ export default function ReplySosPage() {
 	const { alarmId, type } = query;
 	const [error, setError] = useState<string>();
 
+	const listenForSosReply = useCallback((sosAlarmId: string) =>
+		listenFor(FirestoreSource.sosReplies, sosAlarmId, (sosReplyData: DocumentSnapshot<DocumentData>) => {
+			if (sosReplyData.exists()) {
+				const _contactLabel = _getEmergencyContactLabel(type?.toString());
+				const _sosReply: SosReply = SosReply.fromData(sosReplyData.data());
+				setSosReply(_sosReply[_contactLabel]);
+			}
+		}), [listenFor, type])
+
 	useEffect(() => {
-		if (alarmId)
-			loadData(alarmId.toString());
-	}, [alarmId])
-
-	const loadData = async (id: string) => {
-		try {
-			const controllerId: string | null = await loadControllerIdFromAlarmId(id);
-			if (controllerId == null) return;
-			const userId = await loadUserIdwithControllerId(controllerId)
-			if (userId == null) return;
-			await loadUserDataWithUserId(userId);
-		} catch (e) {
-			setError("Alarmen kunne ikke findes");
+		var sosReplySubscription: Unsubscribe;
+		if (alarm != null) {
+			sosReplySubscription = listenForSosReply(alarm?.alarmId)
 		}
-	}
+		return () => {
+			if (sosReplySubscription != null) {
+				sosReplySubscription();
+			}
+		}
+	}, [alarm, listenForSosReply])
 
-	const loadControllerIdFromAlarmId = async (alarmId: string) => {
+	const loadControllerIdFromAlarmId = useCallback(async (alarmId: string) => {
 		const alarmData = await getWhere(FirestoreSource.deviceAlarms, where("alarmId", "==", alarmId));
 		if (alarmData != null) {
 			const alarm: Alarm = Alarm.fromData(alarmData.at(0));
@@ -41,9 +45,9 @@ export default function ReplySosPage() {
 			return alarm.controllerId;
 		}
 		return null;
-	}
+	}, [getWhere]);
 
-	const loadUserIdwithControllerId = async (controllerId: string) => {
+	const loadUserIdwithControllerId = useCallback(async (controllerId: string) => {
 		const controllerData = await get(FirestoreSource.controllers, controllerId);
 		if (controllerData) {
 			const controller = Controller.fromData(controllerData);
@@ -51,15 +55,15 @@ export default function ReplySosPage() {
 			return userId;
 		}
 		return null;
-	}
+	}, [get]);
 
-	const loadUserDataWithUserId = async (userId: string) => {
+	const loadUserDataWithUserId = useCallback(async (userId: string) => {
 		const userData = await getWhere(FirestoreSource.userData, where("userId", "==", userId));
 		if (userData) {
 			const user = User.fromData(userData.at(0));
 			setUser(user);
 		}
-	}
+	}, [getWhere]);
 
 	const _getEmergencyContactLabel = (contactType?: string) => {
 		switch (contactType) {
@@ -74,23 +78,19 @@ export default function ReplySosPage() {
 		}
 	}
 
-	const handleCancelAlarm = async () =>
-		await get(FirestoreSource.sosReplies, alarm?.alarmId!)?.then(async (sosReplyData: any) => {
-			const _contactLabel = _getEmergencyContactLabel(type?.toString());
-			const _sosReply: SosReply = SosReply.fromData(sosReplyData);
-			setSosReply(_sosReply[_contactLabel]);
-			return await update(FirestoreSource.sosReplies, alarm?.alarmId!, {
-				[_contactLabel]: {
-					..._sosReply[_contactLabel],
-					state: "disapproved",
-					timestamp: serverTimestamp(),
-				},
-			}).then(() => {
-				if (alarmId)
-					loadData(alarmId.toString());
-				return
-			});
+	const handleCancelAlarm = async () => {
+		const _contactLabel = _getEmergencyContactLabel(type?.toString());
+		return await update(FirestoreSource.sosReplies, alarm?.alarmId!, {
+			[_contactLabel]: {
+				...sosReply,
+				state: "disapproved",
+				timestamp: serverTimestamp(),
+			},
+		}).then(() => {
+			if (alarmId)
+				loadData(alarmId.toString());
 		});
+	}
 
 	const handleComment = async (comment: string) => {
 		if (sosReply) {
@@ -104,6 +104,23 @@ export default function ReplySosPage() {
 			})
 		}
 	}
+
+	const loadData = useCallback(async (id: string) => {
+		try {
+			const controllerId: string | null = await loadControllerIdFromAlarmId(id);
+			if (controllerId == null) return;
+			const userId = await loadUserIdwithControllerId(controllerId)
+			if (userId == null) return;
+			await loadUserDataWithUserId(userId);
+		} catch (e) {
+			setError("Alarmen kunne ikke findes");
+		}
+	}, [loadControllerIdFromAlarmId, loadUserDataWithUserId, loadUserIdwithControllerId])
+
+	useEffect(() => {
+		if (alarmId)
+			loadData(alarmId.toString());
+	}, [alarmId, loadData])
 
 	return (
 		<BasePage title={ReplySosPage.title}>

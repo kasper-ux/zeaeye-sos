@@ -22,9 +22,8 @@ export const DescriptionInput = ({ placeholder, onChange, initialValue }: Descri
 			<TextArea
 				placeholder={placeholder}
 				onChange={handleChange}
-				autoFocus >
-				{initialValue}
-			</TextArea>
+				autoFocus
+				defaultValue={initialValue} />
 		</Content>
 	);
 }

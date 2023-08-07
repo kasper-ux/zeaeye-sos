@@ -23,14 +23,14 @@ export const SosCard = ({ user, alarm, initialComment, onCancel, onComment, erro
 
 	useEffect(() => {
 		if (initialComment) {
-
+			setComment(initialComment)
 		}
-	}, [])
+	}, [initialComment])
 
 	const handleSosDismiss = async () => {
 		setLoading(true);
 		await onCancel().then(() => {
-			toast.success("Tak for din feedback!")
+			toast.success("Du har meldt alarmen falsk!")
 		}).finally(() => {
 			setLoading(false);
 		})

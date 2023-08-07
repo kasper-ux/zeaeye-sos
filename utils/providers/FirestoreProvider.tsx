@@ -15,6 +15,8 @@ import {
 	updateDoc,
 	writeBatch,
 	Timestamp,
+	onSnapshot,
+	Unsubscribe,
 } from "firebase/firestore";
 import firebase from '../../config/firebase';
 import FirestoreSource from '../../config/firestore';
@@ -62,6 +64,11 @@ interface ContextProps {
 		source: FirestoreSource,
 		data: FirestoreUpdate
 	) => Promise<DocumentData>,
+	listenFor: (
+		source: FirestoreSource,
+		id: string,
+		onUpdate: (update: DocumentSnapshot<DocumentData>) => void,
+	) => Unsubscribe,
 	serverTimestamp: () => Timestamp,
 }
 
@@ -133,6 +140,14 @@ export default function FirestoreProvider({
 		data
 	);
 
+	const listenFor = (
+		source: FirestoreSource,
+		id: string,
+		onUpdate: (update: DocumentSnapshot<DocumentData>) => void,
+	): Unsubscribe =>
+		onSnapshot(
+			doc(firestore, source, id), onUpdate);
+
 	const serverTimestamp = () =>
 		Timestamp.fromDate(new Date());
 
@@ -142,6 +157,7 @@ export default function FirestoreProvider({
 				get,
 				getAll,
 				getWhere,
+				listenFor,
 				update,
 				batchUpdate,
 				create,
